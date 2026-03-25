@@ -5,12 +5,13 @@
 ## 功能特点
 
 - 🌐 直接输入CSDN文章URL即可转换
-- 📄 同时生成Markdown和PDF两种格式
+- 📄 生成高质量的PDF格式文档
 - 🖼️ 自动下载并本地化所有图片
 - 📁 使用相对路径引用图片（Markdown）
 - 🎨 美观的PDF输出格式
 - 💾 记住上次使用的输出路径
 - 🖥️ 友好的图形界面
+- 🧹 **自动清理临时文件**：转换完成后自动删除.md文件和images/文件夹，只保留PDF
 
 ## 安装步骤
 
@@ -89,13 +90,24 @@ csdn-pdfer/
 2. 图片发现与下载（使用MD5命名避免冲突）
 3. HTML到Markdown转换
 4. Markdown到PDF转换（带样式）
+5. **自动清理临时文件**（.md文件和images/文件夹）
 
 ### 图片处理
 
-- 图片保存到: `output_dir/images/`
-- Markdown中使用相对路径引用
+- 图片保存到: `output_dir/images/`（临时，PDF生成后删除）
+- Markdown中使用相对路径引用（临时文件）
 - PDF生成时转换为绝对路径
 - 支持相对和绝对URL
+- **最终输出**：只保留PDF文件
+
+### 输出文件
+
+- **最终输出**：`{output_name}.pdf` - 唯一保留的文件
+- **临时文件**（自动删除）：
+  - `{output_name}.md` - Markdown中间文件
+  - `images/` - 下载的图片文件夹
+
+如需保留临时文件进行调试，可在 `main.py` 中设置 `keep_temp_files=True`
 
 ## 依赖项
 
