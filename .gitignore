@@ -60,8 +60,11 @@ venv.bak/
 # Output files (generated during conversion)
 results/
 *.pdf
-*.md
 images/
+# Ignore .md files except README files
+*.md
+!README.md
+!README_DISTRIBUTION.md
 
 # User configuration
 csdn_pdfer_config.json
