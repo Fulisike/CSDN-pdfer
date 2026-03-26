@@ -45,6 +45,10 @@ class CSDNPDFerGUI:
             r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe",
             r"C:\Program Files (x86)\wkhtmltopdf\bin\wkhtmltopdf.exe",
             os.path.join(base_dir, "wkhtmltopdf", "wkhtmltopdf.exe"),
+            # 开发环境：查找 dist 文件夹
+            os.path.join(base_dir, "dist", "wkhtmltopdf.exe"),
+            # 查找项目根目录的 wkhtmltox 文件夹
+            os.path.join(base_dir, "wkhtmltox-0.12.6-1.mxe-cross-win64", "wkhtmltox", "bin", "wkhtmltopdf.exe"),
         ]
 
         for path in possible_paths:
