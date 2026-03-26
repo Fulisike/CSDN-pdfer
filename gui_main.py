@@ -11,7 +11,7 @@ import threading
 class CSDNPDFerGUI:
     def __init__(self, root):
         self.root = root
-        self.root.title("CSDN PDFer - 博客转PDF工具")
+        self.root.title("Blog PDFer - 博客转PDF工具")
         self.root.geometry("700x650")
 
         # 配置文件路径
@@ -83,12 +83,31 @@ class CSDNPDFerGUI:
         row = 0
 
         # 标题
-        title_label = ttk.Label(main_frame, text="CSDN PDFer", font=("Microsoft YaHei", 16, "bold"))
+        title_label = ttk.Label(main_frame, text="Blog PDFer", font=("Microsoft YaHei", 16, "bold"))
         title_label.grid(row=row, column=0, columnspan=3, pady=(0, 20))
         row += 1
 
+        # 平台选择
+        ttk.Label(main_frame, text="博客平台:").grid(row=row, column=0, sticky=tk.W, pady=5)
+        self.platform_var = tk.StringVar(value="csdn")
+        platform_frame = ttk.Frame(main_frame)
+        platform_frame.grid(row=row, column=1, sticky=tk.W, pady=5, padx=5)
+
+        platforms = [
+            ("CSDN", "csdn"),
+            ("博客园 (cnblogs)", "cnblogs"),
+        ]
+        for i, (text, value) in enumerate(platforms):
+            ttk.Radiobutton(
+                platform_frame,
+                text=text,
+                variable=self.platform_var,
+                value=value
+            ).grid(row=0, column=i, padx=10)
+        row += 1
+
         # URL 输入
-        ttk.Label(main_frame, text="CSDN文章URL:").grid(row=row, column=0, sticky=tk.W, pady=5)
+        ttk.Label(main_frame, text="文章URL:").grid(row=row, column=0, sticky=tk.W, pady=5)
         self.url_entry = ttk.Entry(main_frame, width=50)
         self.url_entry.grid(row=row, column=1, sticky=(tk.W, tk.E), pady=5, padx=5)
         row += 1
@@ -114,7 +133,7 @@ class CSDNPDFerGUI:
         ttk.Label(main_frame, text="文件名前缀:").grid(row=row, column=0, sticky=tk.W, pady=5)
         self.filename_entry = ttk.Entry(main_frame, width=50)
         self.filename_entry.grid(row=row, column=1, sticky=(tk.W, tk.E), pady=5, padx=5)
-        self.filename_entry.insert(0, "csdn_article")
+        self.filename_entry.insert(0, "blog_article")
         row += 1
 
         # wkhtmltopdf 路径状态
@@ -233,9 +252,17 @@ class CSDNPDFerGUI:
             # 在主线程中调用转换器（因为需要更新GUI）
             def do_convert():
                 try:
+                    # 根据平台选择CSS选择器
+                    platform = self.platform_var.get()
+                    selectors = {
+                        "csdn": "#content_views",
+                        "cnblogs": "#mainContent",
+                    }
+                    selector = selectors.get(platform, "#content_views")
+
                     converter.process(
                         html_content=html_content,
-                        target_div_selector="#content_views",
+                        target_div_selector=selector,
                         output_name=filename_prefix,
                         base_url=url,
                         keep_temp_files=False  # 不保留临时文件
