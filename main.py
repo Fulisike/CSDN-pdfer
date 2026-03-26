@@ -65,13 +65,27 @@ class HtmlToMdPdfConverter:
         :param base_url: 如果图片链接是相对路径，需要提供 base_url
         :param keep_temp_files: 是否保留临时文件（md文件和images文件夹），默认False删除
         """
-        
+
+        # 调试：打印所有参数
+        print("=" * 60)
+        print("🔍 process 方法参数:")
+        print(f"  html_content 类型: {type(html_content)}, 长度: {len(html_content) if html_content else 0}")
+        print(f"  target_div_selector: {repr(target_div_selector)}")
+        print(f"  output_name: {repr(output_name)}")
+        print(f"  base_url: {repr(base_url)}")
+        print(f"  keep_temp_files: {keep_temp_files}")
+        print(f"  self.output_dir: {repr(self.output_dir)}")
+        print(f"  self.images_dir: {repr(self.images_dir)}")
+        print("=" * 60)
+
         # 1. 解析 HTML
         soup = BeautifulSoup(html_content, 'html.parser')
         target_div = soup.select_one(target_div_selector)
-        
+
         if not target_div:
-            raise ValueError("未找到指定的 DIV 元素")
+            raise ValueError(f"未找到指定的 DIV 元素: {target_div_selector}")
+
+        print(f"✅ 成功找到目标 DIV，内容长度: {len(str(target_div))} 字符")
 
         # 2. 处理图片
         images = target_div.find_all('img')
@@ -125,13 +139,23 @@ class HtmlToMdPdfConverter:
 
         # 将Markdown中的相对路径转回绝对路径用于PDF生成
         md_for_pdf = md_content
+
+        # 检查 self.output_dir 是否有效
+        if self.output_dir is None:
+            raise ValueError("self.output_dir 是 None！无法继续处理。")
+
         def replace_relative_with_absolute(match):
             rel_path = match.group(1)
+            if rel_path is None:
+                print("  ⚠️  WARNING: rel_path is None!")
+                return match.group(0)
             abs_path = os.path.abspath(os.path.join(self.output_dir, rel_path))
             return f']({abs_path})'
 
+        print("🔄 转换相对路径为绝对路径...")
         md_for_pdf = re.sub(r'\]\((?!http)([^\)]+)\)', replace_relative_with_absolute, md_for_pdf)
 
+        print("🔄 转换 Markdown 为 HTML...")
         html_for_pdf = markdown.markdown(md_for_pdf, extensions=['extra'])
         
         # 添加一些基本的 CSS 让 PDF 好看点
@@ -154,15 +178,18 @@ class HtmlToMdPdfConverter:
         """
         
         pdf_file_path = os.path.join(self.output_dir, f"{output_name}.pdf")
-        
+        print(f"📄 PDF 文件路径: {pdf_file_path}")
+        print(f"📄 PDF 配置: {self.pdf_config}")
+
         options = {
             'enable-local-file-access': None,  # 允许访问本地图片
             'encoding': 'UTF-8'
         }
-        
+
         try:
+            print("🖨️  开始生成 PDF...")
             pdfkit.from_string(styled_html, pdf_file_path, configuration=self.pdf_config, options=options)
-            print(f"PDF 已生成: {pdf_file_path}")
+            print(f"✅ PDF 已生成: {pdf_file_path}")
 
             # 清理临时文件（如果不需要保留）
             if not keep_temp_files:

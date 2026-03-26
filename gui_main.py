@@ -277,7 +277,9 @@ class CSDNPDFerGUI:
                     self.root.after(0, lambda: self.log("="*50))
                     self.root.after(0, lambda: messagebox.showinfo("成功", f"转换完成！\n\nPDF已保存到:\n{os.path.join(output_path, filename_prefix + '.pdf')}"))
                 except Exception as e:
-                    self.root.after(0, lambda: self.log(f"错误: {str(e)}"))
+                    import traceback
+                    error_msg = f"错误: {str(e)}\n\n详细错误:\n{traceback.format_exc()}"
+                    self.root.after(0, lambda: self.log(error_msg))
                     self.root.after(0, lambda: messagebox.showerror("错误", f"转换失败:\n{str(e)}"))
                 finally:
                     self.root.after(0, lambda: self.progress.stop())
