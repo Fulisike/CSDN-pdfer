@@ -279,8 +279,9 @@ class CSDNPDFerGUI:
                 except Exception as e:
                     import traceback
                     error_msg = f"错误: {str(e)}\n\n详细错误:\n{traceback.format_exc()}"
-                    self.root.after(0, lambda: self.log(error_msg))
-                    self.root.after(0, lambda: messagebox.showerror("错误", f"转换失败:\n{str(e)}"))
+                    error_short = str(e)
+                    self.root.after(0, lambda msg=error_msg: self.log(msg))
+                    self.root.after(0, lambda err=error_short: messagebox.showerror("错误", f"转换失败:\n{err}"))
                 finally:
                     self.root.after(0, lambda: self.progress.stop())
                     self.root.after(0, lambda: self.start_button.config(state=tk.NORMAL))
@@ -288,8 +289,9 @@ class CSDNPDFerGUI:
             do_convert()
 
         except Exception as e:
-            self.root.after(0, lambda: self.log(f"错误: {str(e)}"))
-            self.root.after(0, lambda: messagebox.showerror("错误", f"下载失败:\n{str(e)}"))
+            error_msg = str(e)
+            self.root.after(0, lambda msg=error_msg: self.log(f"错误: {msg}"))
+            self.root.after(0, lambda err=error_msg: messagebox.showerror("错误", f"下载失败:\n{err}"))
             self.root.after(0, lambda: self.progress.stop())
             self.root.after(0, lambda: self.start_button.config(state=tk.NORMAL))
 

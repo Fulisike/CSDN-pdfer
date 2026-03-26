@@ -116,17 +116,27 @@ class HtmlToMdPdfConverter:
         # 4. 将Markdown中的图片路径改为相对路径
         # 查找所有图片引用并替换为相对路径
         import re
+
         def replace_absolute_with_relative(match):
+            # 获取捕获的路径，如果没有捕获组则返回原始内容
+            if match.lastindex is None or match.lastindex < 1:
+                return match.group(0)
+
             abs_path = match.group(1)
+            if not abs_path:
+                return match.group(0)
+
             try:
                 rel_path = os.path.relpath(abs_path, self.output_dir)
                 return f']({rel_path})'
-            except ValueError:
-                # 在不同驱动器上时，保持绝对路径
+            except (ValueError, TypeError) as e:
+                # 路径在不同驱动器上或其他错误，保持绝对路径
+                print(f"  ⚠️  路径转换警告: {e}")
                 return match.group(0)
 
-        # 匹配 ](绝对路径) 格式
-        md_content = re.sub(r'\]\((file://)?[A-Za-z]:[^\)]+\)', replace_absolute_with_relative, md_content)
+        # 匹配 ](Windows绝对路径) 格式，例如 ](C:\path\to\file) 或 ](file:///C:\path\to\file)
+        # 使用非捕获组 (?:...) 来匹配可选的 file:// 前缀
+        md_content = re.sub(r'\]\((?:file://)?([A-Za-z]:[^\)]+)\)', replace_absolute_with_relative, md_content)
 
         md_file_path = os.path.join(self.output_dir, f"{output_name}.md")
         with open(md_file_path, 'w', encoding='utf-8') as f:
@@ -145,15 +155,24 @@ class HtmlToMdPdfConverter:
             raise ValueError("self.output_dir 是 None！无法继续处理。")
 
         def replace_relative_with_absolute(match):
-            rel_path = match.group(1)
-            if rel_path is None:
-                print("  ⚠️  WARNING: rel_path is None!")
+            # 检查是否有捕获组
+            if match.lastindex is None or match.lastindex < 1:
                 return match.group(0)
-            abs_path = os.path.abspath(os.path.join(self.output_dir, rel_path))
-            return f']({abs_path})'
+
+            rel_path = match.group(1)
+            if not rel_path or rel_path.startswith('#'):  # 跳过锚点链接
+                return match.group(0)
+
+            try:
+                abs_path = os.path.abspath(os.path.join(self.output_dir, rel_path))
+                return f']({abs_path})'
+            except (ValueError, TypeError) as e:
+                print(f"  ⚠️  路径转换警告: {e}")
+                return match.group(0)
 
         print("🔄 转换相对路径为绝对路径...")
-        md_for_pdf = re.sub(r'\]\((?!http)([^\)]+)\)', replace_relative_with_absolute, md_for_pdf)
+        # 匹配非 http/https 开头的链接，但排除锚点链接（以 # 开头的已经在上面的函数中处理）
+        md_for_pdf = re.sub(r'\]\((?!https?://)([^\)]+)\)', replace_relative_with_absolute, md_for_pdf)
 
         print("🔄 转换 Markdown 为 HTML...")
         html_for_pdf = markdown.markdown(md_for_pdf, extensions=['extra'])
